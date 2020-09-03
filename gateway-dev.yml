@@ -37,7 +37,6 @@ spring:
       # 配置gateway跨域
       globalcors:
         corsConfigurations:
-          '[/**]':  # 上传到config找不到，不知道原因
             allowedOrigins: "*" #这种写法或者下面的都可以，*表示全部
             allowedMethods: "*"
 
