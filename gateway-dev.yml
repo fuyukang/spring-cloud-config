@@ -1,0 +1,49 @@
+server:
+  port: 12000
+spring:
+  application:
+    name: api-gateway
+  #使用网关来代理service-provider服务
+  cloud:
+    gateway:
+      routes:
+        # 路由的id值，可以随便写
+        - id: service-provider-route
+          # 代理的服务地址
+          # uri: http://127.0.0.1:8080
+          # 不能采用写死的方法进行获取 服务端的地址，如果这个服务部署了多个的话，写死的地址只能访问一个，因此要从Eureka上动态拉取
+          uri: lb://service-provider
+          # 路由断言，可以配置的映射路径,即对访问的路径进行拦截，如果设置为/**，则表示拦截所有
+          predicates:
+            - Path=/api/user/**
+          # 局部过滤器
+          filters:
+            # 对访问的来的路径添加前缀 例如: 访问路径为：127.0.0.1:12000/8 --> 127.0.0.1:8080/user/8
+            # - PrefixPath=/user
+            # 表示去除后缀，其中1,表示去除一个前缀，2表示去除两个前缀路径，即127.0.0.1:12000/api/user/8 --> 127.0.0.1:8080/user/8
+            - StripPrefix=1
+            - Local=age
+        # 可配置多个代理服务
+        - id: service-consumer
+          uri: lb://service-consumer
+          predicates:
+            - Path=/cf/**
+      #全局过滤器
+      default-filters:
+        # 响应头过滤器，对输出的响应设置其头部属性名称为x-Response-test，值为mynane；如果有多个参数多则重写一行设置不同的参数
+        - AddResponseHeader=x-Response-test,myname
+        #设置响应格式为json格式
+        - AddResponseHeader=Content-Type,application/json;charset=utf-8
+      # 配置gateway跨域
+      globalcors:
+        corsConfigurations:
+          '[/**]':  # 上传到config找不到，不知道原因
+            allowedOrigins: "*" #这种写法或者下面的都可以，*表示全部
+            allowedMethods: "*"
+
+eureka:
+  instance:
+    prefer-ip-address: true # 是否倾向于使用ip
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:10086/eureka,http://127.0.0.1:10087/eureka
